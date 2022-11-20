@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/AdguardTeam/gomitmproxy"
+	"github.com/phayes/freeport"
+
 
 )
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -36,18 +38,24 @@ func main() {
 
 	if *user == "" {
 		*user = randSeq(10)
-		log.Printf("no user given using: %s", *user)
 	}
 
 	if *pwd == "" {
 		*pwd = randSeq(10)
-		log.Printf("no password given using: %s", *pwd)
 	}
 
 	if *port == 0 {
-		*port = 8080
-		log.Printf("no port given using: %d", *port)
+		p, err := freeport.GetFreePort()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		*port =  p
 	}
+
+	log.Printf("user: %s", *user)
+	log.Printf("password: %s", *pwd)
+	log.Printf("port: %d", *port)
 
 
 	proxy := gomitmproxy.NewProxy(gomitmproxy.Config{
