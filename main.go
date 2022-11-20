@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+	"io/ioutil"
+	"strconv"
 	"net"
 	"os"
 	"flag"
@@ -26,11 +28,40 @@ func randSeq(n int) string {
 	return string(b)
 }
 
+func getPort() int {
+	var port int
+
+	buf, err := ioutil.ReadFile("port.txt")
+
+	if err != nil {
+		port, err = freeport.GetFreePort()
+		if err != nil {
+			panic(err)
+		}
+	}else{
+		content := string(buf)
+		port, err = strconv.Atoi(content)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	f, err := os.Create("port.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	f.Write([]byte(strconv.Itoa(port)))
+
+	return port
+}
+
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	port := flag.Int("p", 0, "port of the proxy")
+	port := getPort()
 	user := flag.String("user", "", "username for the proxy basic auth")
 	pwd := flag.String("password", "", "password for the proxy basic auth")
 
@@ -44,23 +75,15 @@ func main() {
 		*pwd = randSeq(10)
 	}
 
-	if *port == 0 {
-		p, err := freeport.GetFreePort()
-		if err != nil {
-			log.Fatal(err)
-		}
-		*port =  p
-	}
-
 	log.Printf("user: %s", *user)
 	log.Printf("password: %s", *pwd)
-	log.Printf("port: %d", *port)
+	log.Printf("port: %d", port)
 
 
 	proxy := gomitmproxy.NewProxy(gomitmproxy.Config{
 		ListenAddr: &net.TCPAddr{
 			IP:   net.IPv4(0, 0, 0, 0),
-			Port: *port,
+			Port: port,
 		},
 		OnRequest:  onRequest,
 		OnResponse: onResponse,
