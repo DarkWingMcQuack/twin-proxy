@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"net"
 	"os"
-	"flag"
 	"os/signal"
 	"syscall"
 	"math/rand"
@@ -26,6 +25,50 @@ func randSeq(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func getPwd() string {
+	var pwd string
+
+	buf, err := ioutil.ReadFile("pwd.txt")
+
+	if err != nil {
+		pwd = randSeq(10)
+	}else{
+		pwd = string(buf)
+	}
+
+	f, err := os.Create("pwd.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	f.Write([]byte(pwd))
+
+	return pwd
+}
+
+func getUser() string {
+	var user string
+
+	buf, err := ioutil.ReadFile("user.txt")
+
+	if err != nil {
+		user = randSeq(10)
+	}else{
+		user = string(buf)
+	}
+
+	f, err := os.Create("user.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	f.Write([]byte(user))
+
+	return user
 }
 
 func getPort() int {
@@ -62,21 +105,11 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	port := getPort()
-	user := flag.String("user", "", "username for the proxy basic auth")
-	pwd := flag.String("password", "", "password for the proxy basic auth")
+	user := getUser()
+	pwd := getPwd()
 
-	flag.Parse()
-
-	if *user == "" {
-		*user = randSeq(10)
-	}
-
-	if *pwd == "" {
-		*pwd = randSeq(10)
-	}
-
-	log.Printf("user: %s", *user)
-	log.Printf("password: %s", *pwd)
+	log.Printf("user: %s", user)
+	log.Printf("password: %s", pwd)
 	log.Printf("port: %d", port)
 
 
@@ -87,8 +120,8 @@ func main() {
 		},
 		OnRequest:  onRequest,
 		OnResponse: onResponse,
-		Username: *user,
-		Password: *pwd,
+		Username: user,
+		Password: pwd,
 	})
 
 	err := proxy.Start()
