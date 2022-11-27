@@ -1,34 +1,21 @@
 package main
 
 import (
-	"crypto/rsa"
-	"crypto/tls"
 	"log"
-	"encoding/json"
 	"net/http"
-	cr "crypto/rand"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
 	"io/ioutil"
 	"strconv"
-	"errors"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"math/rand"
-	"math/big"
 	"time"
 
 	"github.com/AdguardTeam/gomitmproxy"
-	"github.com/AdguardTeam/gomitmproxy/mitm"
 	"github.com/phayes/freeport"
-
-
-
-
 )
+
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func randSeq(n int) string {
